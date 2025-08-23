@@ -213,15 +213,15 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   uint8_t nonce = 0;
   polyvec a[KYBER_K], e, pkpv, skpv;
 
-  printf("  2.1. Split publicseed and noiseseed from SHAKE256(seed)\n");
+  
   memcpy(buf, coins, KYBER_SYMBYTES);
   buf[KYBER_SYMBYTES] = KYBER_K;
   hash_g(buf, buf, KYBER_SYMBYTES+1);
 
-  printf("  3. Generate matrix A from publicseed\n");
+  //
   gen_a(a, publicseed);
 
-  printf("  4. Generate secret vectors s, e from noiseseed\n");
+  //
   for(i=0;i<KYBER_K;i++)
     poly_getnoise_eta1(&skpv.vec[i], noiseseed, nonce++);
   for(i=0;i<KYBER_K;i++)
@@ -230,7 +230,7 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_ntt(&skpv);
   polyvec_ntt(&e);
 
-  printf("  5. Compute pk = A*s + e\n");
+  //
   for(i=0;i<KYBER_K;i++) {
     polyvec_basemul_acc_montgomery(&pkpv.vec[i], &a[i], &skpv);
     poly_tomont(&pkpv.vec[i]);
@@ -239,7 +239,7 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_add(&pkpv, &pkpv, &e);
   polyvec_reduce(&pkpv);
 
-  printf("  6. Pack public and secret keys\n");
+  //
   pack_sk(sk, &skpv);
   pack_pk(pk, &pkpv, publicseed);
 }

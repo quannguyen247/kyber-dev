@@ -15,16 +15,9 @@ static int test_keys(void)
   uint8_t key_b[CRYPTO_BYTES];
 
 
-  printf("\n==============================\n");
-  printf("START: Keypair generation (crypto_kem_keypair)\n");
   crypto_kem_keypair(pk, sk);
-  printf("END: Keypair generated\n");
-  printf("\nSTART: Encapsulation (crypto_kem_enc)\n");
   crypto_kem_enc(ct, key_b, pk);
-  printf("END: Encapsulation done\n");
-  printf("\nSTART: Decapsulation (crypto_kem_dec)\n");
   crypto_kem_dec(key_a, ct, sk);
-  printf("END: Decapsulation done\n");
 
   if(memcmp(key_a, key_b, CRYPTO_BYTES)) {
     printf("ERROR keys\n");
