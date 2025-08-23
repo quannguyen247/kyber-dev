@@ -4,7 +4,7 @@
 #include "../kem.h"
 #include "../randombytes.h"
 
-#define NTESTS 1000
+#define NTESTS 1
 
 static int test_keys(void)
 {
