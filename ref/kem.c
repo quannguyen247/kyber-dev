@@ -52,12 +52,12 @@ int crypto_kem_keypair(uint8_t *pk,
                        uint8_t *sk)
 {
   uint8_t coins[2*KYBER_SYMBYTES];
-  printf("1. Tạo seed ngẫu nhiên\n");
+  printf("1. Generate random seed\n");
   randombytes(coins, 2*KYBER_SYMBYTES);
-  printf("2. Sinh publicseed và noiseseed\n");
+  printf("2. Generate publicseed and noiseseed\n");
   // Bước này nằm trong derand
   crypto_kem_keypair_derand(pk, sk, coins);
-  printf("KẾT THÚC: Trả về pk và sk, hoàn tất quá trình tạo khóa.\n");
+  printf("END: Return pk and sk, keypair generation complete.\n");
   return 0;
 }
 
