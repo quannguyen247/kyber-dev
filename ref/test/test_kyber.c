@@ -56,6 +56,7 @@ static int test_keys(void)
 
   printf("====== ENCAPSULATION STAGE ======\n\n");
   // Step 1: Generate random message m
+  randombytes(m, KYBER_SYMBYTES);
   print_hex_full("[Step 1] Random message m", m, KYBER_SYMBYTES);
 
   // Step 2: Hash public key
