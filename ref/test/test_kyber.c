@@ -130,23 +130,28 @@ static int test_invalid_sk_a(void)
   uint8_t key_a[CRYPTO_BYTES];
   uint8_t key_b[CRYPTO_BYTES];
 
-  //Alice generates a public key
+  // Alice generates a public key
   crypto_kem_keypair(pk, sk);
 
-  //Bob derives a secret key and creates a response
+  // Bob derives a secret key and creates a response
   crypto_kem_enc(ct, key_b, pk);
 
-  //Replace secret key with random values
+  // Replace secret key with random values
+  printf("Original secret key sk: \n");
+  print_hex_full("sk", sk, CRYPTO_SECRETKEYBYTES);
   randombytes(sk, CRYPTO_SECRETKEYBYTES);
+  printf("Modified secret key sk: \n");
+  print_hex_full("sk", sk, CRYPTO_SECRETKEYBYTES);
 
-  //Alice uses Bobs response to get her shared key
+  // Alice uses Bob's response to get her shared key
   crypto_kem_dec(key_a, ct, sk);
 
-  if(!memcmp(key_a, key_b, CRYPTO_BYTES)) {
-    printf("ERROR invalid sk\n");
+  if (!memcmp(key_a, key_b, CRYPTO_BYTES)) {
+    printf("ERROR: invalid sk did not cause failure\n");
     return 1;
   }
 
+  printf("[Success] test_invalid_sk_a failed as expected.\n");
   return 0;
 }
 
@@ -160,28 +165,32 @@ static int test_invalid_ciphertext(void)
   uint8_t b;
   size_t pos;
 
-  do {
-    randombytes(&b, sizeof(uint8_t));
-  } while(!b);
-  randombytes((uint8_t *)&pos, sizeof(size_t));
-
-  //Alice generates a public key
+  // Alice generates a public key
   crypto_kem_keypair(pk, sk);
 
-  //Bob derives a secret key and creates a response
+  // Bob derives a secret key and creates a response
   crypto_kem_enc(ct, key_b, pk);
 
-  //Change some byte in the ciphertext (i.e., encapsulated key)
+  // Change some byte in the ciphertext (i.e., encapsulated key)
+  printf("Original ciphertext ct: \n");
+  print_hex_full("ct", ct, CRYPTO_CIPHERTEXTBYTES);
+  do {
+    randombytes(&b, sizeof(uint8_t));
+  } while (!b);
+  randombytes((uint8_t *)&pos, sizeof(size_t));
   ct[pos % CRYPTO_CIPHERTEXTBYTES] ^= b;
+  printf("Modified ciphertext ct: \n");
+  print_hex_full("ct", ct, CRYPTO_CIPHERTEXTBYTES);
 
-  //Alice uses Bobs response to get her shared key
+  // Alice uses Bob's response to get her shared key
   crypto_kem_dec(key_a, ct, sk);
 
-  if(!memcmp(key_a, key_b, CRYPTO_BYTES)) {
-    printf("ERROR invalid ciphertext\n");
+  if (!memcmp(key_a, key_b, CRYPTO_BYTES)) {
+    printf("ERROR: invalid ciphertext did not cause failure\n");
     return 1;
   }
 
+  printf("[Success] test_invalid_ciphertext failed as expected.\n");
   return 0;
 }
 
