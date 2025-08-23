@@ -1,6 +1,6 @@
 CC ?= /usr/bin/cc
 CFLAGS += -Wall -Wextra -Wpedantic -Wmissing-prototypes -Wredundant-decls \
-  -Wshadow -Wpointer-arith -O3 -fomit-frame-pointer -z noexecstack
+  -Wshadow -Wpointer-arith -O3 -fomit-frame-pointer # remove -z noexecstack
 NISTFLAGS += -Wno-unused-result -O3 -fomit-frame-pointer
 RM = /bin/rm
 
@@ -39,20 +39,20 @@ nistkat: \
 
 
 lib/libpqcrystals_fips202_ref.so: fips202.c fips202.h
-	mkdir -p lib
+	if not exist lib mkdir lib
 	$(CC) -shared -fPIC $(CFLAGS) fips202.c -o $@
 
-lib/libpqcrystals_kyber512_ref.so: $(SOURCES) $(HEADERS) symmetric-shake.c
-	mkdir -p lib
-	$(CC) -shared -fPIC $(CFLAGS) -DKYBER_K=2 $(SOURCES) symmetric-shake.c -o $@
+lib/libpqcrystals_kyber512_ref.so: $(SOURCES) $(HEADERS) symmetric-shake.c fips202.c randombytes.c
+	if not exist lib mkdir lib
+	$(CC) -shared $(CFLAGS) -DKYBER_K=2 $(SOURCES) symmetric-shake.c fips202.c randombytes.c -o $@
 
-lib/libpqcrystals_kyber768_ref.so: $(SOURCES) $(HEADERS) symmetric-shake.c
-	mkdir -p lib
-	$(CC) -shared -fPIC $(CFLAGS) -DKYBER_K=3 $(SOURCES) symmetric-shake.c -o $@
+lib/libpqcrystals_kyber768_ref.so: $(SOURCES) $(HEADERS) symmetric-shake.c fips202.c randombytes.c
+	if not exist lib mkdir lib
+	$(CC) -shared $(CFLAGS) -DKYBER_K=3 $(SOURCES) symmetric-shake.c fips202.c randombytes.c -o $@
 
-lib/libpqcrystals_kyber1024_ref.so: $(SOURCES) $(HEADERS) symmetric-shake.c
-	mkdir -p lib
-	$(CC) -shared -fPIC $(CFLAGS) -DKYBER_K=4 $(SOURCES) symmetric-shake.c -o $@
+lib/libpqcrystals_kyber1024_ref.so: $(SOURCES) $(HEADERS) symmetric-shake.c fips202.c randombytes.c
+	if not exist lib mkdir lib
+	$(CC) -shared $(CFLAGS) -DKYBER_K=4 $(SOURCES) symmetric-shake.c fips202.c randombytes.c -o $@
 
 test/test_kyber512: $(SOURCESKECCAK) $(HEADERSKECCAK) test/test_kyber.c randombytes.c
 	$(CC) $(CFLAGS) -DKYBER_K=2 $(SOURCESKECCAK) randombytes.c test/test_kyber.c -o $@
