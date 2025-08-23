@@ -8,7 +8,7 @@
 #include "ntt.h"
 #include "symmetric.h"
 #include "randombytes.h"
-
+#include <stdio.h>
 /*************************************************
 * Name:        pack_pk
 *
@@ -213,12 +213,15 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   uint8_t nonce = 0;
   polyvec a[KYBER_K], e, pkpv, skpv;
 
+  printf("  2.1. Tách publicseed và noiseseed từ SHAKE256(seed)\n");
   memcpy(buf, coins, KYBER_SYMBYTES);
   buf[KYBER_SYMBYTES] = KYBER_K;
   hash_g(buf, buf, KYBER_SYMBYTES+1);
 
+  printf("  3. Sinh ma trận A từ publicseed\n");
   gen_a(a, publicseed);
 
+  printf("  4. Sinh vector bí mật s, e từ noiseseed\n");
   for(i=0;i<KYBER_K;i++)
     poly_getnoise_eta1(&skpv.vec[i], noiseseed, nonce++);
   for(i=0;i<KYBER_K;i++)
@@ -227,7 +230,7 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_ntt(&skpv);
   polyvec_ntt(&e);
 
-  // matrix-vector multiplication
+  printf("  5. Tính pk = A*s + e\n");
   for(i=0;i<KYBER_K;i++) {
     polyvec_basemul_acc_montgomery(&pkpv.vec[i], &a[i], &skpv);
     poly_tomont(&pkpv.vec[i]);
@@ -236,6 +239,7 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_add(&pkpv, &pkpv, &e);
   polyvec_reduce(&pkpv);
 
+  printf("  6. Đóng gói khóa công khai và bí mật\n");
   pack_sk(sk, &skpv);
   pack_pk(pk, &pkpv, publicseed);
 }

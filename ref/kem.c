@@ -7,6 +7,7 @@
 #include "verify.h"
 #include "symmetric.h"
 #include "randombytes.h"
+#include <stdio.h>
 /*************************************************
 * Name:        crypto_kem_keypair_derand
 *
@@ -51,8 +52,12 @@ int crypto_kem_keypair(uint8_t *pk,
                        uint8_t *sk)
 {
   uint8_t coins[2*KYBER_SYMBYTES];
+  printf("1. Tạo seed ngẫu nhiên\n");
   randombytes(coins, 2*KYBER_SYMBYTES);
+  printf("2. Sinh publicseed và noiseseed\n");
+  // Bước này nằm trong derand
   crypto_kem_keypair_derand(pk, sk, coins);
+  printf("KẾT THÚC: Trả về pk và sk, hoàn tất quá trình tạo khóa.\n");
   return 0;
 }
 

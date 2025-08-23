@@ -14,14 +14,17 @@ static int test_keys(void)
   uint8_t key_a[CRYPTO_BYTES];
   uint8_t key_b[CRYPTO_BYTES];
 
-  //Alice generates a public key
+
+  printf("\n==============================\n");
+  printf("BẮT ĐẦU: Tạo keypair (crypto_kem_keypair)\n");
   crypto_kem_keypair(pk, sk);
-
-  //Bob derives a secret key and creates a response
+  printf("KẾT THÚC: Đã tạo xong keypair\n");
+  printf("\nBẮT ĐẦU: Đóng gói khóa (crypto_kem_enc)\n");
   crypto_kem_enc(ct, key_b, pk);
-
-  //Alice uses Bobs response to get her shared key
+  printf("KẾT THÚC: Đã đóng gói khóa\n");
+  printf("\nBẮT ĐẦU: Giải đóng gói khóa (crypto_kem_dec)\n");
   crypto_kem_dec(key_a, ct, sk);
+  printf("KẾT THÚC: Đã giải đóng gói khóa\n");
 
   if(memcmp(key_a, key_b, CRYPTO_BYTES)) {
     printf("ERROR keys\n");
