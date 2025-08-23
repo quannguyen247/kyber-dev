@@ -39,19 +39,19 @@ nistkat: \
 
 
 lib/libpqcrystals_fips202_ref.so: fips202.c fips202.h
-	mkdir -p lib
+	if not exist lib mkdir lib
 	$(CC) -shared -fPIC $(CFLAGS) fips202.c -o $@
 
 lib/libpqcrystals_kyber512_ref.so: $(SOURCES) $(HEADERS) symmetric-shake.c
-	mkdir -p lib
+	if not exist lib mkdir lib
 	$(CC) -shared -fPIC $(CFLAGS) -DKYBER_K=2 $(SOURCES) symmetric-shake.c -o $@
 
 lib/libpqcrystals_kyber768_ref.so: $(SOURCES) $(HEADERS) symmetric-shake.c
-	mkdir -p lib
+	if not exist lib mkdir lib
 	$(CC) -shared -fPIC $(CFLAGS) -DKYBER_K=3 $(SOURCES) symmetric-shake.c -o $@
 
 lib/libpqcrystals_kyber1024_ref.so: $(SOURCES) $(HEADERS) symmetric-shake.c
-	mkdir -p lib
+	if not exist lib mkdir lib
 	$(CC) -shared -fPIC $(CFLAGS) -DKYBER_K=4 $(SOURCES) symmetric-shake.c -o $@
 
 test/test_kyber512: $(SOURCESKECCAK) $(HEADERSKECCAK) test/test_kyber.c randombytes.c
