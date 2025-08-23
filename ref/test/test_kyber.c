@@ -188,8 +188,23 @@ static int test_invalid_ciphertext(void)
 int main(void)
 {
   int r = test_keys();
-  printf("CRYPTO_SECRETKEYBYTES:  %d\n",CRYPTO_SECRETKEYBYTES);
-  printf("CRYPTO_PUBLICKEYBYTES:  %d\n",CRYPTO_PUBLICKEYBYTES);
-  printf("CRYPTO_CIPHERTEXTBYTES: %d\n",CRYPTO_CIPHERTEXTBYTES);
+  printf("CRYPTO_SECRETKEYBYTES:  %d\n", CRYPTO_SECRETKEYBYTES);
+  printf("CRYPTO_PUBLICKEYBYTES:  %d\n", CRYPTO_PUBLICKEYBYTES);
+  printf("CRYPTO_CIPHERTEXTBYTES: %d\n", CRYPTO_CIPHERTEXTBYTES);
+
+  printf("\n====== TESTING INVALID SECRET KEY ======\n");
+  if (test_invalid_sk_a() == 0) {
+    printf("[Error] test_invalid_sk_a did not fail as expected!\n");
+  } else {
+    printf("[Success] test_invalid_sk_a failed as expected.\n");
+  }
+
+  printf("\n====== TESTING INVALID CIPHERTEXT ======\n");
+  if (test_invalid_ciphertext() == 0) {
+    printf("[Error] test_invalid_ciphertext did not fail as expected!\n");
+  } else {
+    printf("[Success] test_invalid_ciphertext failed as expected.\n");
+  }
+
   return r;
 }
