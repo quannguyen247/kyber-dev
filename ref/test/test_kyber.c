@@ -8,11 +8,10 @@
 
 
 
-// Print first n bytes as hex
-static void print_hex_short(const char *label, const uint8_t *data, size_t len, size_t n) {
-  printf("%s (first %zu bytes): ", label, n);
-  for (size_t i = 0; i < n && i < len; i++) printf("%02x", data[i]);
-  if (len > n) printf("...");
+// Print entire data as hex
+static void print_hex_full(const char *label, const uint8_t *data, size_t len) {
+  printf("%s: ", label);
+  for (size_t i = 0; i < len; i++) printf("%02x", data[i]);
   printf("\n");
 }
 
@@ -30,7 +29,7 @@ static int test_keys(void)
   printf("====== KEY GENERATION STAGE ======\n\n");
   // Step 1: Generate seed
   randombytes(coins, 2*KYBER_SYMBYTES);
-  print_hex_short("[Step 1] Seed generated.", coins, 2*KYBER_SYMBYTES, 8);
+  print_hex_full("[Step 1] Seed generated.", coins, 2*KYBER_SYMBYTES);
 
   // Step 2: Generate publicseed and noiseseed
   printf("[Step 2] Generating publicseed and noiseseed...\n");
@@ -51,13 +50,13 @@ static int test_keys(void)
   // Step 6: Pack keys
   printf("[Step 6] Packing keys...\n");
   crypto_kem_keypair(pk, sk);
-  print_hex_short("[Step 7] Public key pk", pk, CRYPTO_PUBLICKEYBYTES, 8);
-  print_hex_short("[Step 8] Secret key sk", sk, CRYPTO_SECRETKEYBYTES, 8);
+  print_hex_full("[Step 7] Public key pk", pk, CRYPTO_PUBLICKEYBYTES);
+  print_hex_full("[Step 8] Secret key sk", sk, CRYPTO_SECRETKEYBYTES);
   printf("[Done] Key generation completed successfully.\n\n");
 
   printf("====== ENCAPSULATION STAGE ======\n\n");
   // Step 1: Generate random message m
-  print_hex_short("[Step 1] Random message m", m, KYBER_SYMBYTES, 8);
+  print_hex_full("[Step 1] Random message m", m, KYBER_SYMBYTES);
 
   // Step 2: Hash public key
   printf("[Step 2] Hashing public key...\n");
@@ -82,8 +81,8 @@ static int test_keys(void)
   // Step 7: Pack ciphertext
   printf("[Step 7] Packing ciphertext...\n");
   crypto_kem_enc(ct, ss_enc, pk);
-  print_hex_short("[Step 8] Ciphertext", ct, CRYPTO_CIPHERTEXTBYTES, 8);
-  print_hex_short("[Step 9] Shared secret (enc)", ss_enc, CRYPTO_BYTES, 8);
+  print_hex_full("[Step 8] Ciphertext", ct, CRYPTO_CIPHERTEXTBYTES);
+  print_hex_full("[Step 9] Shared secret (enc)", ss_enc, CRYPTO_BYTES);
   printf("[Done] Encapsulation completed successfully.\n\n");
 
   printf("====== DECAPSULATION STAGE ======\n\n");
@@ -110,7 +109,7 @@ static int test_keys(void)
   // Step 6: Compare u, v with u', v'...
   printf("[Step 6] Comparing u, v with u', v'...\n");
   crypto_kem_dec(ss_dec, ct, sk);
-  print_hex_short("[Step 7] Shared secret (dec)", ss_dec, CRYPTO_BYTES, 8);
+  print_hex_full("[Step 7] Shared secret (dec)", ss_dec, CRYPTO_BYTES);
 
   if(memcmp(ss_enc, ss_dec, CRYPTO_BYTES)) {
     printf("[Error] Shared secrets do not match!\n");
