@@ -272,33 +272,38 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   polyvec sp, pkpv, ep, at[KYBER_K], b;
   poly v, k, epp;
 
+  printf("    a. Unpack public key\n");
   unpack_pk(&pkpv, seed, pk);
+  printf("    b. Convert message to polynomial\n");
   poly_frommsg(&k, m);
+  printf("    c. Generate matrix A^T from publicseed\n");
   gen_at(at, seed);
 
+  printf("    d. Generate ephemeral secret vectors sp, ep, epp from coins\n");
   for(i=0;i<KYBER_K;i++)
     poly_getnoise_eta1(sp.vec+i, coins, nonce++);
   for(i=0;i<KYBER_K;i++)
     poly_getnoise_eta2(ep.vec+i, coins, nonce++);
   poly_getnoise_eta2(&epp, coins, nonce++);
 
+  printf("    e. NTT transform of sp\n");
   polyvec_ntt(&sp);
 
-  // matrix-vector multiplication
+  printf("    f. Matrix-vector multiplication and add errors\n");
   for(i=0;i<KYBER_K;i++)
     polyvec_basemul_acc_montgomery(&b.vec[i], &at[i], &sp);
-
   polyvec_basemul_acc_montgomery(&v, &pkpv, &sp);
 
+  printf("    g. Inverse NTT and add message\n");
   polyvec_invntt_tomont(&b);
   poly_invntt_tomont(&v);
-
   polyvec_add(&b, &b, &ep);
   poly_add(&v, &v, &epp);
   poly_add(&v, &v, &k);
   polyvec_reduce(&b);
   poly_reduce(&v);
 
+  printf("    h. Pack ciphertext\n");
   pack_ciphertext(c, &b, &v);
 }
 

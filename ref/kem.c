@@ -87,15 +87,19 @@ int crypto_kem_enc_derand(uint8_t *ct,
   /* Will contain key, coins */
   uint8_t kr[2*KYBER_SYMBYTES];
 
+  printf("1. Generate random message m\n");
   memcpy(buf, coins, KYBER_SYMBYTES);
 
-  /* Multitarget countermeasure for coins + contributory KEM */
+  printf("2. Hash public key\n");
   hash_h(buf+KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
+
+  printf("3. Derive coins from m and hash_pk\n");
   hash_g(kr, buf, 2*KYBER_SYMBYTES);
 
-  /* coins are in kr+KYBER_SYMBYTES */
+  printf("4. CPA-secure encryption (indcpa_enc)\n");
   indcpa_enc(ct, buf, pk, kr+KYBER_SYMBYTES);
 
+  printf("5. Derive shared secret\n");
   memcpy(ss,kr,KYBER_SYMBYTES);
   return 0;
 }
@@ -154,21 +158,19 @@ int crypto_kem_dec(uint8_t *ss,
   uint8_t cmp[KYBER_CIPHERTEXTBYTES];
   const uint8_t *pk = sk+KYBER_INDCPA_SECRETKEYBYTES;
 
+  printf("1. Decrypt ciphertext (indcpa_dec)\n");
   indcpa_dec(buf, ct, sk);
 
-  /* Multitarget countermeasure for coins + contributory KEM */
+  printf("2. Hash secret key and recover coins\n");
   memcpy(buf+KYBER_SYMBYTES, sk+KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES, KYBER_SYMBYTES);
   hash_g(kr, buf, 2*KYBER_SYMBYTES);
 
-  /* coins are in kr+KYBER_SYMBYTES */
+  printf("3. Re-encrypt and compare ciphertexts\n");
   indcpa_enc(cmp, buf, pk, kr+KYBER_SYMBYTES);
-
   fail = verify(ct, cmp, KYBER_CIPHERTEXTBYTES);
 
-  /* Compute rejection key */
+  printf("4. Derive shared secret (if valid) or pseudorandom (if invalid)\n");
   rkprf(ss,sk+KYBER_SECRETKEYBYTES-KYBER_SYMBYTES,ct);
-
-  /* Copy true key to return buffer if fail is false */
   cmov(ss,kr,KYBER_SYMBYTES,!fail);
 
   return 0;
