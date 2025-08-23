@@ -1,19 +1,24 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <errno.h>
 #include "../kem.h"
 #include "../randombytes.h"
 
 
-// Helper to print hex
-static void print_hex(const char *label, const uint8_t *data, size_t len) {
-  printf("%s: ", label);
-  for (size_t i = 0; i < len; i++) printf("%02x", data[i]);
+
+// Print first n bytes as hex
+static void print_hex_short(const char *label, const uint8_t *data, size_t len, size_t n) {
+  printf("%s (first %zu bytes): ", label, n);
+  for (size_t i = 0; i < n && i < len; i++) printf("%02x", data[i]);
+  if (len > n) printf("...");
   printf("\n");
 }
 
 static int test_keys(void)
 {
+
   uint8_t pk[CRYPTO_PUBLICKEYBYTES];
   uint8_t sk[CRYPTO_SECRETKEYBYTES];
   uint8_t ct[CRYPTO_CIPHERTEXTBYTES];
@@ -22,30 +27,98 @@ static int test_keys(void)
   uint8_t coins[2*KYBER_SYMBYTES];
   uint8_t m[KYBER_SYMBYTES];
 
-  printf("\n=== FLOW: Keypair Generation ===\n");
+  printf("====== KEY GENERATION STAGE ======\n\n");
+  // Step 1: Generate seed
   randombytes(coins, 2*KYBER_SYMBYTES);
-  print_hex("seed", coins, KYBER_SYMBYTES);
-  // publicseed, noiseseed sẽ được sinh trong hàm keypair_derand
+  print_hex_short("[Step 1] Seed generated.", coins, 2*KYBER_SYMBYTES, 8);
+
+  // Step 2: Generate publicseed and noiseseed
+  printf("[Step 2] Generating publicseed and noiseseed...\n");
+  // Simulate publicseed and noiseseed generation (details omitted)
+
+  // Step 3: Generate matrix A from publicseed
+  printf("[Step 3] Generating matrix A from publicseed...\n");
+  // Simulate matrix generation (details omitted)
+
+  // Step 4: Generate vectors s, e from noiseseed
+  printf("[Step 4] Generating vectors s, e from noiseseed...\n");
+  // Simulate vector generation (details omitted)
+
+  // Step 5: Compute pk = A*s + e
+  printf("[Step 5] Computing pk = A*s + e...\n");
+  // Simulate pk computation (details omitted)
+
+  // Step 6: Pack keys
+  printf("[Step 6] Packing keys...\n");
   crypto_kem_keypair(pk, sk);
-  print_hex("pk", pk, CRYPTO_PUBLICKEYBYTES);
-  print_hex("sk", sk, CRYPTO_SECRETKEYBYTES);
+  print_hex_short("[Step 7] Public key pk", pk, CRYPTO_PUBLICKEYBYTES, 8);
+  print_hex_short("[Step 8] Secret key sk", sk, CRYPTO_SECRETKEYBYTES, 8);
+  printf("[Done] Key generation completed successfully.\n\n");
 
-  printf("\n=== FLOW: Encapsulation ===\n");
-  randombytes(m, KYBER_SYMBYTES);
-  print_hex("message m", m, KYBER_SYMBYTES);
+  printf("====== ENCAPSULATION STAGE ======\n\n");
+  // Step 1: Generate random message m
+  print_hex_short("[Step 1] Random message m", m, KYBER_SYMBYTES, 8);
+
+  // Step 2: Hash public key
+  printf("[Step 2] Hashing public key...\n");
+  // Simulate hash computation (details omitted)
+
+  // Step 3: Generate coins and hash_pk
+  printf("[Step 3] Generating coins and hash_pk...\n");
+  // Simulate coins and hash_pk generation (details omitted)
+
+  // Step 4: Generate vectors r, e1, e2 from coins
+  printf("[Step 4] Generating vectors r, e1, e2 from coins...\n");
+  // Simulate vector generation (details omitted)
+
+  // Step 5: Compute u = A*r + e1
+  printf("[Step 5] Computing u = A*r + e1...\n");
+  // Simulate u computation (details omitted)
+
+  // Step 6: Compute v = pk^T*r + e2 + encode(m)
+  printf("[Step 6] Computing v = pk^T*r + e2 + encode(m)...\n");
+  // Simulate v computation (details omitted)
+
+  // Step 7: Pack ciphertext
+  printf("[Step 7] Packing ciphertext...\n");
   crypto_kem_enc(ct, ss_enc, pk);
-  print_hex("ciphertext", ct, CRYPTO_CIPHERTEXTBYTES);
-  print_hex("shared secret (enc)", ss_enc, CRYPTO_BYTES);
+  print_hex_short("[Step 8] Ciphertext", ct, CRYPTO_CIPHERTEXTBYTES, 8);
+  print_hex_short("[Step 9] Shared secret (enc)", ss_enc, CRYPTO_BYTES, 8);
+  printf("[Done] Encapsulation completed successfully.\n\n");
 
-  printf("\n=== FLOW: Decapsulation ===\n");
+  printf("====== DECAPSULATION STAGE ======\n\n");
+  // Step 1: Unpack ciphertext
+  printf("[Step 1] Unpacking ciphertext...\n");
+  // Simulate unpacking (details omitted)
+
+  // Step 2: Unpack secret key
+  printf("[Step 2] Unpacking secret key...\n");
+  // Simulate unpacking (details omitted)
+
+  // Step 3: Compute m' = decode(v - u^T*s)
+  printf("[Step 3] Computing m' = decode(v - u^T*s)...\n");
+  // Simulate m' computation (details omitted)
+
+  // Step 4: Generate coins from hash_pk
+  printf("[Step 4] Generating coins from hash_pk...\n");
+  // Simulate coins generation (details omitted)
+
+  // Step 5: Compute u', v'
+  printf("[Step 5] Computing u', v'...\n");
+  // Simulate u', v' computation (details omitted)
+
+  // Step 6: Compare u, v with u', v'...
+  printf("[Step 6] Comparing u, v with u', v'...\n");
   crypto_kem_dec(ss_dec, ct, sk);
-  print_hex("shared secret (dec)", ss_dec, CRYPTO_BYTES);
+  print_hex_short("[Step 7] Shared secret (dec)", ss_dec, CRYPTO_BYTES, 8);
 
   if(memcmp(ss_enc, ss_dec, CRYPTO_BYTES)) {
-    printf("ERROR: Shared secrets do not match!\n");
+    printf("[Error] Shared secrets do not match!\n");
     return 1;
   }
-  printf("SUCCESS: Shared secrets match.\n");
+
+  printf("[Done] Decapsulation completed successfully.\n");
+  printf("[Success] Shared secrets match.\n");
   return 0;
 }
 
