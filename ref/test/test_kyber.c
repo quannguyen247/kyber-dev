@@ -41,8 +41,8 @@ static int test_keys(void)
   for(size_t i=0; i<CRYPTO_BYTES; i++) fprintf(fout, "%02x", key_b[i]);
   fprintf(fout, "\n\n");
 
-  // Make secret key sk or ciphertext ct invalid to test, delete it to make valid
-  //ct[0] ^= 0xFF; // sk[0] ^= 0xFF;
+  // Make secret key sk or ciphertext ct invalid to test
+  // ct[0] ^= 0xFF; // sk[0] ^= 0xFF; 
 
   // Decapsulation Stage
   crypto_kem_dec(key_a, ct, sk);
