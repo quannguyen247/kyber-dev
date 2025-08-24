@@ -56,7 +56,7 @@ int crypto_kem_keypair(uint8_t *pk,
   randombytes(coins, 2*KYBER_SYMBYTES);
   printf("[Step 1] Seed (from coins) generated. First 8 bytes: ");
   for (int i = 0; i < 8; i++) printf("%02x", coins[i]);
-  printf("\n");
+  printf("...\n");
   crypto_kem_keypair_derand(pk, sk, coins);
   return 0;
 }
@@ -87,15 +87,18 @@ int crypto_kem_enc_derand(uint8_t *ct,
   /* Will contain key, coins */
   uint8_t kr[2*KYBER_SYMBYTES];
 
-  memcpy(buf, coins, KYBER_SYMBYTES);
+  memcpy(buf, coins, KYBER_SYMBYTES); // copy coins to buf, first part of buf is random message m (step 1)
 
   /* Multitarget countermeasure for coins + contributory KEM */
+  // Hash pk, save to buf + KYBER_SYMBYTES (hash_pk)
+  printf("[Step 2] Hash pk, obtain hash_pk (buf+KYBER_SYMBYTES) to enhance security\n");
   hash_h(buf+KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
+  printf("[Step 3] Generate derived coins by hashing m and hash_pk\n");
   hash_g(kr, buf, 2*KYBER_SYMBYTES);
 
   /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(ct, buf, pk, kr+KYBER_SYMBYTES);
-
+  printf("[Step 8] Extract shared secret ss from kr\n");
   memcpy(ss,kr,KYBER_SYMBYTES);
   return 0;
 }
@@ -119,8 +122,10 @@ int crypto_kem_enc(uint8_t *ct,
                    uint8_t *ss,
                    const uint8_t *pk)
 {
+  printf("\n====== KEY ENCAPSULATION STAGE ======\n\n");
   uint8_t coins[KYBER_SYMBYTES];
-  randombytes(coins, KYBER_SYMBYTES);
+  printf("[Step 1] Generate coins and random message m (from coins)\n");
+  randombytes(coins, KYBER_SYMBYTES); 
   crypto_kem_enc_derand(ct, ss, pk, coins);
   return 0;
 }
@@ -146,6 +151,7 @@ int crypto_kem_dec(uint8_t *ss,
                    const uint8_t *ct,
                    const uint8_t *sk)
 {
+  printf("\n====== KEY DECAPSULATION STAGE ======\n\n");
   int fail;
   uint8_t buf[2*KYBER_SYMBYTES];
   /* Will contain key, coins */
