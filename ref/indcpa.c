@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 #include "params.h"
 #include "indcpa.h"
 #include "polyvec.h"
@@ -213,12 +214,15 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   uint8_t nonce = 0;
   polyvec a[KYBER_K], e, pkpv, skpv;
 
+  printf("    IND-CPA Keygen: 2. Generating publicseed and noiseseed...\n");
   memcpy(buf, coins, KYBER_SYMBYTES);
   buf[KYBER_SYMBYTES] = KYBER_K;
   hash_g(buf, buf, KYBER_SYMBYTES+1);
 
+  printf("    IND-CPA Keygen: 3. Generating matrix A from publicseed...\n");
   gen_a(a, publicseed);
 
+  printf("    IND-CPA Keygen: 4. Generating secret vector s and error vector e...\n");
   for(i=0;i<KYBER_K;i++)
     poly_getnoise_eta1(&skpv.vec[i], noiseseed, nonce++);
   for(i=0;i<KYBER_K;i++)
@@ -227,7 +231,7 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_ntt(&skpv);
   polyvec_ntt(&e);
 
-  // matrix-vector multiplication
+  printf("    IND-CPA Keygen: 5. Calculating pk = A*s + e...\n");
   for(i=0;i<KYBER_K;i++) {
     polyvec_basemul_acc_montgomery(&pkpv.vec[i], &a[i], &skpv);
     poly_tomont(&pkpv.vec[i]);
@@ -272,6 +276,7 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   poly_frommsg(&k, m);
   gen_at(at, seed);
 
+  printf("    IND-CPA Enc: 4. Generating ephemeral vectors r, e1, e2...\n");
   for(i=0;i<KYBER_K;i++)
     poly_getnoise_eta1(sp.vec+i, coins, nonce++);
   for(i=0;i<KYBER_K;i++)
@@ -280,10 +285,11 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
 
   polyvec_ntt(&sp);
 
-  // matrix-vector multiplication
+  printf("    IND-CPA Enc: 5. Calculating u = A^T*r + e1...\n");
   for(i=0;i<KYBER_K;i++)
     polyvec_basemul_acc_montgomery(&b.vec[i], &at[i], &sp);
 
+  printf("    IND-CPA Enc: 6. Calculating v = pk^T*r + e2 + encode(m)...\n");
   polyvec_basemul_acc_montgomery(&v, &pkpv, &sp);
 
   polyvec_invntt_tomont(&b);
@@ -295,6 +301,7 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   polyvec_reduce(&b);
   poly_reduce(&v);
 
+  printf("    IND-CPA Enc: 7. Packing ciphertext...\n");
   pack_ciphertext(c, &b, &v);
 }
 
@@ -318,10 +325,13 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
   polyvec b, skpv;
   poly v, mp;
 
+  printf("    IND-CPA Dec: 1. Unpacking ciphertext...\n");
   unpack_ciphertext(&b, &v, c);
+  printf("    IND-CPA Dec: 2. Unpacking sk...\n");
   unpack_sk(&skpv, sk);
 
   polyvec_ntt(&b);
+  printf("    IND-CPA Dec: 3. Calculating m' = decode(v - u^T*s)...\n");
   polyvec_basemul_acc_montgomery(&mp, &skpv, &b);
   poly_invntt_tomont(&mp);
 

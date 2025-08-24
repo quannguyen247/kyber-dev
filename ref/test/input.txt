@@ -1,0 +1,2 @@
+This file is for input, as requested.
+The test_kyber program does not read from this file, it generates its own random data.

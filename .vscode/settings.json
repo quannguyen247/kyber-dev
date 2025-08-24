@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "kem.h": "c",
+        "symmetric.h": "c",
+        "randombytes.h": "c"
+    }
+}
