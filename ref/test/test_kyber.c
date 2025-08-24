@@ -42,7 +42,7 @@ static int test_keys(void)
   fprintf(fout, "\n\n");
 
   // Make secret key sk or ciphertext ct invalid to test, delete it to make valid
-  ct[0] ^= 0xFF; // sk[0] ^= 0xFF;
+  //ct[0] ^= 0xFF; // sk[0] ^= 0xFF;
 
   // Decapsulation Stage
   crypto_kem_dec(key_a, ct, sk);
@@ -54,12 +54,12 @@ static int test_keys(void)
 
   // Compare shared secret
   if(memcmp(key_a, key_b, CRYPTO_BYTES)) {
-    printf("ERROR: shared secret mismatch!\n");
+    printf("\nERROR: shared secret mismatch!\n");
     fprintf(fout, "\nResult: shared secret mismatch!\n");
     fclose(fout);
     return 1;
   } else {
-    printf("SUCCESS: shared secret match!\n");
+    printf("\nSUCCESS: shared secret match!\n");
     fprintf(fout, "\nResult: shared secret match!\n");
     fclose(fout);
     return 0;
