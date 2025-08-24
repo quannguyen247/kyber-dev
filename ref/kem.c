@@ -7,6 +7,7 @@
 #include "verify.h"
 #include "symmetric.h"
 #include "randombytes.h"
+#include <stdio.h>
 /*************************************************
 * Name:        crypto_kem_keypair_derand
 *
@@ -50,8 +51,12 @@ int crypto_kem_keypair_derand(uint8_t *pk,
 int crypto_kem_keypair(uint8_t *pk,
                        uint8_t *sk)
 {
+  printf("\n====== KEY GENERATION STAGE ======\n\n");
   uint8_t coins[2*KYBER_SYMBYTES];
   randombytes(coins, 2*KYBER_SYMBYTES);
+  printf("[Step 1] Seed (from coins) generated. First 8 bytes: ");
+  for (int i = 0; i < 8; i++) printf("%02x", coins[i]);
+  printf("\n");
   crypto_kem_keypair_derand(pk, sk, coins);
   return 0;
 }

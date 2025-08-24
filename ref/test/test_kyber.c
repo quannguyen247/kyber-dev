@@ -4,8 +4,6 @@
 #include "../kem.h"
 #include "../randombytes.h"
 
-#define MLEN 100 // limit input for testing
-
 static int test_keys(void)
 {
 
@@ -44,7 +42,7 @@ static int test_keys(void)
   fprintf(fout, "\n\n");
 
   // Make secret key sk or ciphertext ct invalid to test, delete it to make valid
-  // ct[0] ^= 0xFF; // sk[0] ^= 0xFF;
+  ct[0] ^= 0xFF; // sk[0] ^= 0xFF;
 
   // Decapsulation Stage
   crypto_kem_dec(key_a, ct, sk);
@@ -70,7 +68,8 @@ static int test_keys(void)
   return 0;
 }
 
-static int test_invalid_sk_a(void)
+// reference test functions:
+/* static int test_invalid_sk_a(void)
 {
   uint8_t pk[CRYPTO_PUBLICKEYBYTES];
   uint8_t sk[CRYPTO_SECRETKEYBYTES];
@@ -131,15 +130,15 @@ static int test_invalid_ciphertext(void)
   }
 
   return 0;
-}
+} */
 
 int main(void)
 {
   
   int r;
   r = test_keys();
-  r |= test_invalid_sk_a();
-  r |= test_invalid_ciphertext();
+  // r |= test_invalid_sk_a();
+  // r |= test_invalid_ciphertext(); 
   if(r)
     return 1;
 

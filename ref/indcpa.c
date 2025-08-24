@@ -8,6 +8,7 @@
 #include "ntt.h"
 #include "symmetric.h"
 #include "randombytes.h"
+#include "stdio.h"
 
 /*************************************************
 * Name:        pack_pk
@@ -213,21 +214,29 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   uint8_t nonce = 0;
   polyvec a[KYBER_K], e, pkpv, skpv;
 
-  memcpy(buf, coins, KYBER_SYMBYTES);
+  memcpy(buf, coins, KYBER_SYMBYTES); // Copy seed from coins to buf (Step 1)
+
+  // Hash buf(seed) to generate publicseed and noiseseed
   buf[KYBER_SYMBYTES] = KYBER_K;
-  hash_g(buf, buf, KYBER_SYMBYTES+1);
+  hash_g(buf, buf, KYBER_SYMBYTES+1); // publicseed = buf (first half), noiseseed = buf+KYBER_SYMBYTES (second half)
+  printf("[Step 2] Public seed and noise seed generated.\n");
 
+  // Generate matrix A from public seed
   gen_a(a, publicseed);
+  printf("[Step 3] Matrix A generated.\n");
 
+  // Generate secret vectors s, e from noiseseed
   for(i=0;i<KYBER_K;i++)
     poly_getnoise_eta1(&skpv.vec[i], noiseseed, nonce++);
   for(i=0;i<KYBER_K;i++)
     poly_getnoise_eta1(&e.vec[i], noiseseed, nonce++);
+  printf("[Step 4] Secret vectors s, e generated.\n");
 
   polyvec_ntt(&skpv);
   polyvec_ntt(&e);
 
-  // matrix-vector multiplication
+  // Compute pk = A*s + e
+  printf("[Step 5] Compute pk = A*s + e\n");
   for(i=0;i<KYBER_K;i++) {
     polyvec_basemul_acc_montgomery(&pkpv.vec[i], &a[i], &skpv);
     poly_tomont(&pkpv.vec[i]);
@@ -236,6 +245,8 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_add(&pkpv, &pkpv, &e);
   polyvec_reduce(&pkpv);
 
+  // Pack components into pk and sk
+  printf("[Step 6] Pack components into pk and sk\n");
   pack_sk(sk, &skpv);
   pack_pk(pk, &pkpv, publicseed);
 }
