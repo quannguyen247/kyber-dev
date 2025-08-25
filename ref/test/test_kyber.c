@@ -30,7 +30,7 @@ static int test_keys(void)
   for(size_t i=0; i<CRYPTO_SECRETKEYBYTES; i++) fprintf(fout, "%02x", sk[i]);
   fprintf(fout, "\n\n");
 
-  // Encapsulation Stage
+  // Encapsulation Stage (A send and encrypt ct)
   crypto_kem_enc(ct, key_b, pk);
   fprintf(fout, "Encapsulation Stage (A):\n");
   fprintf(fout, "- Input: pk\n");
@@ -44,7 +44,7 @@ static int test_keys(void)
   // Make secret key sk or ciphertext ct invalid to test
   // ct[0] ^= 0xFF; // sk[0] ^= 0xFF; 
 
-  // Decapsulation Stage
+  // Decapsulation Stage (B receive and decrypt ct)
   crypto_kem_dec(key_a, ct, sk);
   fprintf(fout, "Decapsulation Stage (B):\n");
   fprintf(fout, "- Input: ct, sk\n");
