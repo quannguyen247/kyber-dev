@@ -297,10 +297,9 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   printf("[Step 5] Compute u = A*r + e1\n");
   for(i=0;i<KYBER_K;i++)
     polyvec_basemul_acc_montgomery(&b.vec[i], &at[i], &sp);
-
   printf("[Step 6] Compute v = pk^T * r + e2 + encode(m)\n");
   polyvec_basemul_acc_montgomery(&v, &pkpv, &sp);
-
+  
   polyvec_invntt_tomont(&b);
   poly_invntt_tomont(&v);
 
@@ -334,10 +333,15 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
 {
   polyvec b, skpv;
   poly v, mp;
-
+  printf("[Step 1] Unpack ciphertext to get u and v\n");
   unpack_ciphertext(&b, &v, c);
+  printf("[Step 1] Ciphertext ct (first 8 bytes) = ");
+  for (int i = 0; i < 8; i++) printf("%02x", c[i]);
+  printf("...\n"); 
+  printf("[Step 2] Unpack secret key\n");
   unpack_sk(&skpv, sk);
 
+  printf("[Step 3] Compute m' = decode(v - u^T * s)\n");
   polyvec_ntt(&b);
   polyvec_basemul_acc_montgomery(&mp, &skpv, &b);
   poly_invntt_tomont(&mp);
@@ -346,4 +350,7 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
   poly_reduce(&mp);
 
   poly_tomsg(m, &mp);
+  printf("[Step 3] m' (first 8 bytes) = ");
+  for (int i = 0; i < 8; i++) printf("%02x", m[i]);
+  printf("...\n");
 }
