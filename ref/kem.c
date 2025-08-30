@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 199309L // POSIX compliance
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -8,6 +9,11 @@
 #include "symmetric.h"
 #include "randombytes.h"
 #include <stdio.h>
+#include <time.h>
+
+// global timing struct now defined in kem.h
+timing_info_t g_time = {0};
+
 /*************************************************
 * Name:        crypto_kem_keypair_derand
 *
@@ -51,6 +57,9 @@ int crypto_kem_keypair_derand(uint8_t *pk,
 int crypto_kem_keypair(uint8_t *pk,
                        uint8_t *sk)
 {
+  struct timespec start, end;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+
   //printf("\n====== KEY GENERATION STAGE ======\n\n");
   uint8_t coins[2*KYBER_SYMBYTES];
   randombytes(coins, 2*KYBER_SYMBYTES);
@@ -59,6 +68,11 @@ int crypto_kem_keypair(uint8_t *pk,
   //printf("...\n");*/
   crypto_kem_keypair_derand(pk, sk, coins);
   //printf("[DONE] Key pair generation completed successfully!\n");
+
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  double t = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+  g_time.keygen += t;
+
   return 0;
 }
 
@@ -126,12 +140,20 @@ int crypto_kem_enc(uint8_t *ct,
                    uint8_t *ss,
                    const uint8_t *pk)
 {
+  struct timespec start, end;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+
   //printf("\n====== KEY ENCAPSULATION STAGE ======\n\n");
   uint8_t coins[KYBER_SYMBYTES];
   //printf("[Step 1] Generate coins and random message m (from coins)\n");
   randombytes(coins, KYBER_SYMBYTES); 
   crypto_kem_enc_derand(ct, ss, pk, coins);
   //printf("[DONE] Key encapsulation completed successfully!\n");
+
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  double t = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+  g_time.encap += t;
+
   return 0;
 }
 
@@ -156,6 +178,9 @@ int crypto_kem_dec(uint8_t *ss,
                    const uint8_t *ct,
                    const uint8_t *sk)
 {
+  struct timespec start, end;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+
   //printf("\n====== KEY DECAPSULATION STAGE ======\n\n");
   int fail;
   uint8_t buf[2*KYBER_SYMBYTES];
@@ -188,5 +213,18 @@ int crypto_kem_dec(uint8_t *ss,
   cmov(ss,kr,KYBER_SYMBYTES,!fail);
   //printf("[DONE] Key decapsulation completed successfully!\n");
 
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  double t = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+  g_time.decap += t;
+
   return 0;
+}
+
+timing_info_t print_timing_info() {
+  g_time.all = g_time.keygen + g_time.encap + g_time.decap;
+  /* printf("Total KeyGen time: %.6f seconds (%.2f ms)\n", g_time.keygen, g_time.keygen * 1000);
+  printf("Total Encapsulation time: %.6f seconds (%.2f ms)\n", g_time.encap, g_time.encap * 1000);
+  printf("Total Decapsulation time: %.6f seconds (%.2f ms)\n", g_time.decap, g_time.decap * 1000);
+  printf("Total time (NIST compliance): %.6f seconds (%.2f ms)\n", g_time.all, g_time.all * 1000); */
+  return g_time;
 }

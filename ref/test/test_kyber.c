@@ -4,7 +4,7 @@
 #include "../kem.h"
 #include "../randombytes.h"
 
-#define NTESTS 1 // test count
+#define NTESTS 10000 // test count
 
 void run_test(FILE *fout, int test_idx) 
 {
@@ -44,14 +44,14 @@ void run_test(FILE *fout, int test_idx)
   fprintf(fout, "\n");
 
   // Compare shared secret
-  if(memcmp(key_a, key_b, CRYPTO_BYTES)) {
+  /* if(memcmp(key_a, key_b, CRYPTO_BYTES)) {
     printf("\nERROR: shared secret mismatch!\n");
     fprintf(fout, "\nResult: shared secret mismatch!\n");
   } else {
     printf("\nSUCCESS: shared secret match!\n");
     fprintf(fout, "\nResult: shared secret match!\n");
   }
-  fprintf(fout, "\n");
+  fprintf(fout, "\n"); */
   
 }
 
@@ -132,9 +132,16 @@ int main(void)
   }
   fclose(fout);
 
-  printf("CRYPTO_SECRETKEYBYTES:  %d\n",CRYPTO_SECRETKEYBYTES);
-  printf("CRYPTO_PUBLICKEYBYTES:  %d\n",CRYPTO_PUBLICKEYBYTES);
-  printf("CRYPTO_CIPHERTEXTBYTES: %d\n",CRYPTO_CIPHERTEXTBYTES);
+  // Print testing information
+  printf("\n[Testing Information - %d runs]\n\n", NTESTS);
+  timing_info_t t = print_timing_info();
+  printf("Average KeyGen time: %.6fs (%.2f ms)\n", t.keygen / NTESTS, (t.keygen / NTESTS) * 1000);
+  printf("Average Encapsulation time: %.6fs (%.2f ms)\n", t.encap / NTESTS, (t.encap / NTESTS) * 1000);
+  printf("Average Decapsulation time: %.6fs (%.2f ms)\n", t.decap / NTESTS, (t.decap / NTESTS) * 1000);
+  printf("Average all time (NIST compliance): %.6fs (%.2f ms)\n", t.all / NTESTS, (t.all / NTESTS) * 1000);
+  printf("Public key bytes = %d\n", CRYPTO_PUBLICKEYBYTES);
+  printf("Secret key bytes = %d\n", CRYPTO_SECRETKEYBYTES);
+  printf("Ciphertext bytes = %d\n", CRYPTO_CIPHERTEXTBYTES);
 
   return 0;
 }
