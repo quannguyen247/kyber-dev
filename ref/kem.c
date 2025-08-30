@@ -54,9 +54,9 @@ int crypto_kem_keypair(uint8_t *pk,
   //printf("\n====== KEY GENERATION STAGE ======\n\n");
   uint8_t coins[2*KYBER_SYMBYTES];
   randombytes(coins, 2*KYBER_SYMBYTES);
-  //printf("[Step 1] Seed (from coins) generated. First 8 bytes: ");
+  /*printf("[Step 1] Seed (from coins) generated. First 8 bytes: ");
   for (int i = 0; i < 8; i++) printf("%02x", coins[i]);
-  //printf("...\n");
+  //printf("...\n");*/
   crypto_kem_keypair_derand(pk, sk, coins);
   //printf("[DONE] Key pair generation completed successfully!\n");
   return 0;
@@ -89,9 +89,9 @@ int crypto_kem_enc_derand(uint8_t *ct,
   uint8_t kr[2*KYBER_SYMBYTES];
 
   memcpy(buf, coins, KYBER_SYMBYTES); // copy coins to buf, first part of buf is random message m (step 1)
-  //printf("[Step 1] m (first 8 bytes) = ");
+  /*printf("[Step 1] m (first 8 bytes) = ");
   for (int i = 0; i < 8; i++) printf("%02x", buf[i]);
-  //printf("...\n");
+  printf("...\n");*/
 
   /* Multitarget countermeasure for coins + contributory KEM */
   // Hash pk, save to buf + KYBER_SYMBYTES (hash_pk)
@@ -176,9 +176,9 @@ int crypto_kem_dec(uint8_t *ss,
   indcpa_enc(cmp, buf, pk, kr+KYBER_SYMBYTES);
 
   //printf("[Step 8] Compare u,v with u',v' (compare ciphertext)\n"); 
-  //printf("[Step 8] Ciphertext ct' (first 8 bytes) = ");
+  /*printf("[Step 8] Ciphertext ct' (first 8 bytes) = ");
   for (int i = 0; i < 8; i++) printf("%02x", cmp[i]);
-  //printf("...\n");
+  printf("...\n");*/
   fail = verify(ct, cmp, KYBER_CIPHERTEXTBYTES);
 
   /* Compute rejection key */

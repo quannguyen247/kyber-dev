@@ -335,9 +335,10 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
   poly v, mp;
   //printf("[Step 1] Unpack ciphertext to get u and v\n");
   unpack_ciphertext(&b, &v, c);
-  //printf("[Step 1] Ciphertext ct (first 8 bytes) = ");
+  /*printf("[Step 1] Ciphertext ct (first 8 bytes) = ");
   for (int i = 0; i < 8; i++) printf("%02x", c[i]);
-  //printf("...\n"); 
+  printf("...\n");*/
+
   //printf("[Step 2] Unpack secret key\n");
   unpack_sk(&skpv, sk);
 
@@ -350,7 +351,7 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
   poly_reduce(&mp);
 
   poly_tomsg(m, &mp);
-  //printf("[Step 3] m' (first 8 bytes) = ");
+  /*printf("[Step 3] m' (first 8 bytes) = ");
   for (int i = 0; i < 8; i++) printf("%02x", m[i]);
-  //printf("...\n");
+  printf("...\n");*/
 }

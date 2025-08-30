@@ -1,6 +1,7 @@
 #ifndef KEM_H
 #define KEM_H
 
+#include <stdio.h>
 #include <stdint.h>
 #include "params.h"
 
@@ -32,4 +33,8 @@ int crypto_kem_enc(uint8_t *ct, uint8_t *ss, const uint8_t *pk);
 #define crypto_kem_dec KYBER_NAMESPACE(dec)
 int crypto_kem_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
 
+// add prototypes for testing
+void run_test(FILE *fout, int test_idx);
+
 #endif
+
