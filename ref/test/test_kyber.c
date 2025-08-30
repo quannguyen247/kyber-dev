@@ -4,26 +4,21 @@
 #include "../kem.h"
 #include "../randombytes.h"
 
-static int test_keys(void)
+#define NTESTS 1 // test count
+
+void run_test(FILE *fout, int test_idx) 
 {
-
-  FILE *fout = fopen("test/output.txt", "w");
-  if(!fout) {
-    printf("File error\n");
-    return 1;
-  }
-
+  // KeyGen
   uint8_t pk[CRYPTO_PUBLICKEYBYTES];
   uint8_t sk[CRYPTO_SECRETKEYBYTES];
   uint8_t ct[CRYPTO_CIPHERTEXTBYTES];
   uint8_t key_a[CRYPTO_BYTES];
   uint8_t key_b[CRYPTO_BYTES];
 
-  // KeyGen Stage
   crypto_kem_keypair(pk, sk);
-  fprintf(fout, "KeyGen Stage:\n");
-  fprintf(fout, "- Input: None\n");
-  fprintf(fout, "- Output:\n");
+
+  fprintf(fout, "Test #%d\n", test_idx+1);
+  fprintf(fout, "KeyGen Stage:\n- Input: None\n- Output:\n");
   fprintf(fout, "* Public Key: ");
   for(size_t i=0; i<CRYPTO_PUBLICKEYBYTES; i++) fprintf(fout, "%02x", pk[i]);
   fprintf(fout, "\n* Secret Key: ");
@@ -32,9 +27,7 @@ static int test_keys(void)
 
   // Encapsulation Stage (A send and encrypt ct)
   crypto_kem_enc(ct, key_b, pk);
-  fprintf(fout, "Encapsulation Stage (A):\n");
-  fprintf(fout, "- Input: pk\n");
-  fprintf(fout, "- Output: \n");
+  fprintf(fout, "Encapsulation Stage (A):\n- Input: pk\n- Output:\n");
   fprintf(fout, "* Ciphertext: ");
   for(size_t i=0; i<CRYPTO_CIPHERTEXTBYTES; i++) fprintf(fout, "%02x", ct[i]);
   fprintf(fout, "\n* Shared Secret: ");
@@ -46,9 +39,7 @@ static int test_keys(void)
 
   // Decapsulation Stage (B receive and decrypt ct)
   crypto_kem_dec(key_a, ct, sk);
-  fprintf(fout, "Decapsulation Stage (B):\n");
-  fprintf(fout, "- Input: ct, sk\n");
-  fprintf(fout, "- Output: \n* Shared Secret: ");
+  fprintf(fout, "Decapsulation Stage (B):\n- Input: ct, sk\n- Output: \n* Shared Secret: ");
   for(size_t i=0; i<CRYPTO_BYTES; i++) fprintf(fout, "%02x", key_a[i]);
   fprintf(fout, "\n");
 
@@ -56,16 +47,12 @@ static int test_keys(void)
   if(memcmp(key_a, key_b, CRYPTO_BYTES)) {
     printf("\nERROR: shared secret mismatch!\n");
     fprintf(fout, "\nResult: shared secret mismatch!\n");
-    fclose(fout);
-    return 1;
   } else {
     printf("\nSUCCESS: shared secret match!\n");
     fprintf(fout, "\nResult: shared secret match!\n");
-    fclose(fout);
-    return 0;
   }
-
-  return 0;
+  fprintf(fout, "\n");
+  
 }
 
 // reference test functions:
@@ -134,17 +121,20 @@ static int test_invalid_ciphertext(void)
 
 int main(void)
 {
-  
-  int r;
-  r = test_keys();
-  // r |= test_invalid_sk_a();
-  // r |= test_invalid_ciphertext(); 
-  if(r)
+  FILE *fout = fopen("test/output.txt", "w");
+  if (!fout) {
+    printf("File error\n");
     return 1;
+  }
 
-  //printf("CRYPTO_SECRETKEYBYTES:  %d\n",CRYPTO_SECRETKEYBYTES);
-  //printf("CRYPTO_PUBLICKEYBYTES:  %d\n",CRYPTO_PUBLICKEYBYTES);
-  //printf("CRYPTO_CIPHERTEXTBYTES: %d\n",CRYPTO_CIPHERTEXTBYTES);
+  for (int test = 0; test < NTESTS; ++test) {
+    run_test(fout, test);
+  }
+  fclose(fout);
+
+  printf("CRYPTO_SECRETKEYBYTES:  %d\n",CRYPTO_SECRETKEYBYTES);
+  printf("CRYPTO_PUBLICKEYBYTES:  %d\n",CRYPTO_PUBLICKEYBYTES);
+  printf("CRYPTO_CIPHERTEXTBYTES: %d\n",CRYPTO_CIPHERTEXTBYTES);
 
   return 0;
 }
