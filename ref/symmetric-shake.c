@@ -4,7 +4,22 @@
 #include "params.h"
 #include "symmetric.h"
 #include "fips202.h"
+/*
+kyber_shake128_absorb:
 
+Mục đích: Dùng để tạo ra ma trận công khai A, một thành phần cốt lõi của khóa công khai Kyber.
+Cách hoạt động: Nó lấy một "hạt giống" (seed) và hai số nhỏ x, y (đóng vai trò như tọa độ). Nó kết hợp chúng lại và "hấp thụ" (absorb) vào trạng thái của SHAKE128. Việc này chuẩn bị cho bước tiếp theo là "vắt" (squeeze) ra các phần tử của ma trận A. Việc thêm x và y đảm bảo rằng mỗi phần tử của ma trận được tạo ra một cách độc nhất.
+
+kyber_shake256_prf:
+
+Mục đích: Đây là một "Hàm Ngẫu nhiên Giả" (Pseudo-Random Function - PRF). Nó được dùng để tạo ra "nhiễu" (noise) ngẫu nhiên, một yếu tố quan trọng để che giấu thông điệp bí mật.
+Cách hoạt động: Nó lấy một khóa bí mật (key) và một số công khai nhỏ gọi là nonce. Nó kết hợp chúng và dùng SHAKE256 để tạo ra một chuỗi byte giả ngẫu nhiên có độ dài mong muốn.
+
+kyber_shake256_rkprf:
+
+Mục đích: Hàm này được sử dụng trong quá trình giải mã (decapsulation). Nó lấy khóa bí mật và bản tin đã mã hóa (ciphertext) để tính toán lại khóa bí mật chung (shared secret).
+Cách hoạt động: Nó băm (hash) khóa bí mật cùng với bản tin mã hóa. Kết quả của việc băm này chính là khóa bí mật chung. Đây là một bước kiểm tra quan trọng: nếu bản tin mã hóa đã bị thay đổi trên đường truyền, kết quả băm sẽ khác và khóa bí mật chung sẽ sai, dẫn đến việc giải mã thất bại.
+*/
 /*************************************************
 * Name:        kyber_shake128_absorb
 *
