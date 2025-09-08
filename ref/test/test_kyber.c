@@ -142,6 +142,7 @@ int main(void)
   printf("Public key bytes = %d\n", CRYPTO_PUBLICKEYBYTES);
   printf("Secret key bytes = %d\n", CRYPTO_SECRETKEYBYTES);
   printf("Ciphertext bytes = %d\n", CRYPTO_CIPHERTEXTBYTES);
+  printf("Shared secret bytes = %d\n", CRYPTO_BYTES);
 
   return 0;
 }
