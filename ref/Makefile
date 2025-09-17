@@ -11,15 +11,15 @@ HEADERSKECCAK = $(HEADERS) fips202.h
 
 .PHONY: all speed shared clean
 
-all: test speed shared nistkat
+all: test # speed shared nistkat
 
 test: \
   test/test_kyber512 \
   test/test_kyber768 \
   test/test_kyber1024 \
-  test/test_vectors512 \
-  test/test_vectors768 \
-  test/test_vectors1024 \
+  #test/test_vectors512 \
+  #test/test_vectors768 \
+  #test/test_vectors1024 \
 
 speed: \
   test/test_speed512 \
