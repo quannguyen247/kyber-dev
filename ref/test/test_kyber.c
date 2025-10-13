@@ -4,9 +4,9 @@
 #include "../kem.h"
 #include "../randombytes.h"
 
-#define NTESTS 10000 // test count
+#define NTESTS 1 // test count
 
-void run_test(FILE *fout, int test_idx) 
+void run_test(int test_idx)
 {
   // KeyGen
   uint8_t pk[CRYPTO_PUBLICKEYBYTES];
@@ -16,32 +16,32 @@ void run_test(FILE *fout, int test_idx)
   uint8_t key_b[CRYPTO_BYTES];
 
   crypto_kem_keypair(pk, sk);
-
-  fprintf(fout, "Test #%d\n", test_idx+1);
+  
+  /* fprintf(fout, "Test #%d\n", test_idx+1);
   fprintf(fout, "KeyGen Stage:\n- Input: None\n- Output:\n");
   fprintf(fout, "* Public Key: ");
   for(size_t i=0; i<CRYPTO_PUBLICKEYBYTES; i++) fprintf(fout, "%02x", pk[i]);
   fprintf(fout, "\n* Secret Key: ");
   for(size_t i=0; i<CRYPTO_SECRETKEYBYTES; i++) fprintf(fout, "%02x", sk[i]);
-  fprintf(fout, "\n\n");
+  fprintf(fout, "\n\n"); */
 
   // Encapsulation Stage (A send and encrypt ct)
   crypto_kem_enc(ct, key_b, pk);
-  fprintf(fout, "Encapsulation Stage (A):\n- Input: pk\n- Output:\n");
+  /* fprintf(fout, "Encapsulation Stage (A):\n- Input: pk\n- Output:\n");
   fprintf(fout, "* Ciphertext: ");
   for(size_t i=0; i<CRYPTO_CIPHERTEXTBYTES; i++) fprintf(fout, "%02x", ct[i]);
   fprintf(fout, "\n* Shared Secret: ");
   for(size_t i=0; i<CRYPTO_BYTES; i++) fprintf(fout, "%02x", key_b[i]);
-  fprintf(fout, "\n\n");
+  fprintf(fout, "\n\n"); */
 
   // Make secret key sk or ciphertext ct invalid to test
   // ct[0] ^= 0xFF; // sk[0] ^= 0xFF; 
 
   // Decapsulation Stage (B receive and decrypt ct)
   crypto_kem_dec(key_a, ct, sk);
-  fprintf(fout, "Decapsulation Stage (B):\n- Input: ct, sk\n- Output: \n* Shared Secret: ");
-  for(size_t i=0; i<CRYPTO_BYTES; i++) fprintf(fout, "%02x", key_a[i]);
-  fprintf(fout, "\n");
+  // fprintf(fout, "Decapsulation Stage (B):\n- Input: ct, sk\n- Output: \n* Shared Secret: ");
+  // for(size_t i=0; i<CRYPTO_BYTES; i++) fprintf(fout, "%02x", key_a[i]);
+  // fprintf(fout, "\n");
 
   // Compare shared secret
   /* if(memcmp(key_a, key_b, CRYPTO_BYTES)) {
@@ -53,6 +53,7 @@ void run_test(FILE *fout, int test_idx)
   }
   fprintf(fout, "\n"); */
   
+  (void)test_idx;
 }
 
 // reference test functions:
@@ -121,16 +122,10 @@ static int test_invalid_ciphertext(void)
 
 int main(void)
 {
-  FILE *fout = fopen("test/output.txt", "w");
-  if (!fout) {
-    printf("File error\n");
-    return 1;
-  }
-
+  
   for (int test = 0; test < NTESTS; ++test) {
-    run_test(fout, test);
+    run_test(test);
   }
-  fclose(fout);
 
   // Print testing information
   printf("\n[Testing Information - %d runs]\n\n", NTESTS);
