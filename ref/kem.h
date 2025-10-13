@@ -47,7 +47,6 @@ extern timing_info_t g_time;
 timing_info_t print_timing_info(void);
 
 // add prototypes for testing
-void run_test(FILE *fout, int test_idx);
+void run_test(int test_idx);
 
 #endif
-
