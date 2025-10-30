@@ -1,6 +1,7 @@
 CC ?= /usr/bin/cc
 CFLAGS += -Wall -Wextra -Wpedantic -Wmissing-prototypes -Wredundant-decls \
-  -Wshadow -Wpointer-arith -O3 -fomit-frame-pointer # remove -z noexecstack
+  -Wshadow -Wpointer-arith -O3 -fomit-frame-pointer \
+  -z noexecstack
 NISTFLAGS += -Wno-unused-result -O3 -fomit-frame-pointer
 RM = /bin/rm
 
@@ -107,4 +108,3 @@ clean:
 	-$(RM) -f nistkat/*.req
 	-$(RM) -f nistkat/*.rsp
 	-$(RM) -rf lib/
-
