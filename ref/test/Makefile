@@ -4,11 +4,12 @@ CFLAGS ?= -Wall -Wextra -Wpedantic -Wmissing-prototypes -Wredundant-decls \
 
 ROOT := ..
 
-SOURCES = $(ROOT)/kem.c $(ROOT)/cbd.c $(ROOT)/ntt.c $(ROOT)/poly.c \
-  $(ROOT)/polyvec.c $(ROOT)/reduce.c $(ROOT)/symmetric-shake.c
-HEADERS = $(ROOT)/api.h $(ROOT)/cbd.h $(ROOT)/ntt.h $(ROOT)/poly.h \
-  $(ROOT)/polyvec.h $(ROOT)/reduce.h $(ROOT)/symmetric.h $(ROOT)/randombytes.h \
-  $(ROOT)/kem.h
+SOURCES = $(ROOT)/kem.c $(ROOT)/indcpa.c $(ROOT)/polyvec.c $(ROOT)/poly.c \
+  $(ROOT)/ntt.c $(ROOT)/cbd.c $(ROOT)/reduce.c $(ROOT)/verify.c \
+  $(ROOT)/symmetric-shake.c
+HEADERS = $(ROOT)/api.h $(ROOT)/kem.h $(ROOT)/indcpa.h $(ROOT)/polyvec.h \
+  $(ROOT)/poly.h $(ROOT)/ntt.h $(ROOT)/cbd.h $(ROOT)/reduce.h \
+  $(ROOT)/verify.h $(ROOT)/symmetric.h $(ROOT)/randombytes.h
 KECCAK_SOURCES = $(SOURCES) $(ROOT)/fips202.c
 KECCAK_HEADERS = $(HEADERS) $(ROOT)/fips202.h
 
