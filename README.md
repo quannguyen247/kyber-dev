@@ -1,101 +1,351 @@
-# Kyber
+# Kyber (research fork)
 
-# Custom Kyber Implementation for PQC Research & Benchmarking
+This repository is a fork of the upstream Kyber implementation (pq-crystals/kyber), customized for post-quantum cryptography (PQC) research and benchmarking.
 
-This repository is a fork of the official [Kyber](https://github.com/pq-crystals/kyber) implementation, customized by **quannguyen247** for the purpose of experimenting with, modifying, and benchmarking Post-Quantum Cryptography (PQC) algorithms.
+It contains:
+- `ref/`: portable reference C implementation (clean, not platform-optimized)
+- `avx2/`: optimized x86_64 implementation using AVX2/BMI2/POPCNT
+- `ref/test/`: additional Kyber TCP client/server demo + stress tool (POSIX)
 
-## Purpose
-The primary goal of this fork is to provide a flexible framework for research and detailed performance analysis. Key objectives include:
-- **Algorithmic Experimentation:** Facilitating modifications to core components such as hash functions and matrix operations to study their impact on security and efficiency.
-- **Comparative Analysis:** Enabling side-by-side performance comparisons of different implementation strategies and optimizations.
-- **Performance Metrics:** Precise execution time measurement for key generation, encapsulation, and decapsulation.
+For a list of changes in this fork, see [CHANGELOG.md](CHANGELOG.md).
 
-## Key Modifications
-Significant changes have been made to the `ref` implementation to support these goals. For a detailed list of all modifications, please refer to the [CHANGELOG.md](CHANGELOG.md) file.
+## Table of contents
 
-# Kyber
-[![Build Status](https://travis-ci.org/pq-crystals/kyber.svg?branch=master)](https://travis-ci.org/pq-crystals/kyber) 
-[![Coverage Status](https://coveralls.io/repos/github/pq-crystals/kyber/badge.svg?branch=master)](https://coveralls.io/github/pq-crystals/kyber?branch=master)
+- [Reproducibility quick start](#reproducibility-quick-start)
+- [Build](#build)
+- [Correctness tests](#correctness-tests)
+- [Benchmarking (cycle counts)](#benchmarking-cycle-counts)
+- [Deterministic test vectors](#deterministic-test-vectors)
+- [NIST KAT generator (optional)](#nist-kat-generator-optional)
+- [TCP client/server demo (optional)](#tcp-clientserver-demo-optional)
+- [Coverage (optional)](#coverage-optional)
+- [License](#license)
 
-This repository contains the official reference implementation of the [Kyber](https://www.pq-crystals.org/kyber/) key encapsulation mechanism, 
-and an optimized implementation for x86 CPUs supporting the AVX2 instruction set. 
-Kyber has been selected for standardization in [round 3](https://csrc.nist.gov/Projects/post-quantum-cryptography/round-3-submissions) 
-of the [NIST PQC](https://csrc.nist.gov/projects/post-quantum-cryptography) standardization project.
+## Reproducibility quick start
 
+### Platform notes
 
-## Build instructions
+- **Linux is recommended** for reproducible benchmarking.
+- **macOS** builds the `ref/` implementation fine in most setups.
+- **Windows**: use **WSL2** (the demo tools under `ref/test/` use POSIX headers/APIs such as `unistd.h` and `fork()`).
 
-The implementations contain several test and benchmarking programs and a Makefile to facilitate compilation.
+### Dependencies
 
-### Prerequisites
+Ubuntu/Debian:
 
-Some of the test programs require [OpenSSL](https://openssl.org). 
-If the OpenSSL header files and/or shared libraries do not lie in one of the standard locations on your system, 
-it is necessary to specify their location via compiler and linker flags in the environment variables `CFLAGS`, `NISTFLAGS`, and `LDFLAGS`.
+```sh
+sudo apt-get update
+sudo apt-get install -y build-essential make pkg-config libssl-dev
+```
 
-For example, on macOS you can install OpenSSL via [Homebrew](https://brew.sh) by running
+Optional tools:
+
+```sh
+sudo apt-get install -y valgrind lcov
+```
+
+macOS (OpenSSL headers/libs may require flags):
+
 ```sh
 brew install openssl
+export CFLAGS="-I$(brew --prefix openssl)/include"
+export NISTFLAGS="-I$(brew --prefix openssl)/include"
+export LDFLAGS="-L$(brew --prefix openssl)/lib"
 ```
-Then, run
+
+## Build
+
+All commands below assume you are at the repository root.
+
+### Reference implementation (`ref/`)
+
+Build correctness tests:
+
 ```sh
-export CFLAGS="-I/usr/local/opt/openssl@1.1/include"
-export NISTFLAGS="-I/usr/local/opt/openssl@1.1/include"
-export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"
+make -C ref clean
+make -C ref
 ```
-before compilation to add the OpenSSL header and library locations to the respective search paths.
 
-### Building all binaries
+This produces:
 
-To compile the test and benchmarking programs on Linux or macOS, go to the `ref/` or `avx2/` directory and run
+- `ref/test/test_kyber512`
+- `ref/test/test_kyber768`
+- `ref/test/test_kyber1024`
+
+### AVX2 implementation (`avx2/`)
+
+Requires an x86_64 CPU with AVX2.
+
 ```sh
-make
+make -C avx2 clean
+make -C avx2
 ```
-This produces the executables
+
+This produces:
+
+- `avx2/test/test_kyber512`, `avx2/test/test_vectors512`, `avx2/test/test_speed512`
+- `avx2/test/test_kyber768`, `avx2/test/test_vectors768`, `avx2/test/test_speed768`
+- `avx2/test/test_kyber1024`, `avx2/test/test_vectors1024`, `avx2/test/test_speed1024`
+
+## Correctness tests
+
+Reference:
+
 ```sh
-test/test_kyber$ALG
-test/test_vectors$ALG
-test/test_speed$ALG
+./ref/test/test_kyber512
+./ref/test/test_kyber768
+./ref/test/test_kyber1024
 ```
-where `$ALG` ranges over the parameter sets 512, 768, 1024.
 
-* `test_kyber$ALG` tests 1000 times to generate keys, encapsulate a random key and correctly decapsulate it again. 
-  Also, the program tests that the keys cannot correctly be decapsulated using a random secret key 
-  or a ciphertext where a single random byte was randomly distorted in order to test for trivial failures of the CCA security. 
-  The program will abort with an error message and return 1 if there was an error. 
-  Otherwise it will output the key and ciphertext sizes and return 0.
-* `test_vectors$ALG` generates 10000 sets of test vectors containing keys, ciphertexts and shared secrets 
-  whose byte-strings are output in hexadecimal. It also generates test vector for decapsulation of invalid
-  (pseudorandom) ciphertexts.
-  The required random bytes are deterministic and come from SHAKE128 on empty input.
-* `test_speed$ALG` reports the median and average cycle counts of 1000 executions of various internal functions 
-  and the API functions for key generation, encapsulation and decapsulation. 
-  By default the Time Step Counter is used. 
-  If instead you want to obtain the actual cycle counts from the Performance Measurement Counters, export `CFLAGS="-DUSE_RDPMC"` before compilation.
+AVX2:
 
-Please note that the reference implementation in `ref/` is not optimized for any platform, and, since it prioritises clean code, 
-is significantly slower than a trivially optimized but still platform-independent implementation. 
-Hence benchmarking the reference code does not provide particularly meaningful results.
-
-<!--
-Our Kyber implementations are contained in the [SUPERCOP](https://bench.cr.yp.to) benchmarking framework. 
-See [here](http://bench.cr.yp.to/results-kem.html#amd64-kizomba) for cycle counts on an Intel KabyLake CPU.
--->
-
-## Shared libraries
-
-All implementations can be compiled into shared libraries by running
 ```sh
-make shared
+./avx2/test/test_kyber512
+./avx2/test/test_kyber768
+./avx2/test/test_kyber1024
 ```
-For example in the directory `ref/` of the reference implementation, this produces the libraries
+
+## Benchmarking (cycle counts)
+
+The `test_speed*` programs print median and average cycle counts (1000 iterations) using `RDTSC` by default.
+
+Reference:
+
 ```sh
-libpqcrystals_kyber$ALG_ref.so
+make -C ref speed
+./ref/test/test_speed512
+./ref/test/test_speed768
+./ref/test/test_speed1024
 ```
-for all parameter sets `$ALG`, and the required symmetric crypto libraries
+
+AVX2:
+
+```sh
+make -C avx2 speed
+./avx2/test/test_speed512
+./avx2/test/test_speed768
+./avx2/test/test_speed1024
 ```
-libpqcrystals_aes256ctr_ref.so
-libpqcrystals_fips202_ref.so
+
+Optional (use RDPMC instead of TSC, if supported in your environment):
+
+```sh
+make -C ref clean
+make -C ref speed CFLAGS="-DUSE_RDPMC"
 ```
-All global symbols in the libraries lie in the namespaces `pqcrystals_kyber$ALG_ref`, `libpqcrystals_aes256ctr_ref` and `libpqcrystals_fips202_ref`. Hence it is possible to link a program against all libraries simultaneously and obtain access to all implementations for all parameter sets. The corresponding API header file is `ref/api.h`, which contains prototypes for all API functions and preprocessor defines for the key and signature lengths.
+
+Reproducibility tips:
+
+- Pin the exact commit hash: `git rev-parse HEAD`
+- Record compiler versions: `gcc --version` / `clang --version`
+- Record CPU model and frequency scaling settings (e.g., `lscpu`)
+
+## Deterministic test vectors
+
+The `test_vectors*` programs generate deterministic test vectors (10000 sets). Randomness is derived from SHAKE128 on empty input (deterministic).
+
+Reference (note: vector binaries are **not** built by default in `ref/`):
+
+```sh
+make -C ref test/test_vectors512 test/test_vectors768 test/test_vectors1024
+./ref/test/test_vectors512 > tvecs512.txt
+./ref/test/test_vectors768 > tvecs768.txt
+./ref/test/test_vectors1024 > tvecs1024.txt
+```
+
+AVX2:
+
+```sh
+./avx2/test/test_vectors512 > tvecs512.txt
+./avx2/test/test_vectors768 > tvecs768.txt
+./avx2/test/test_vectors1024 > tvecs1024.txt
+```
+
+## NIST KAT generator (optional)
+
+The NIST KAT generator (under `ref/nistkat/`) requires OpenSSL.
+
+```sh
+make -C ref nistkat
+./ref/nistkat/PQCgenKAT_kem512
+./ref/nistkat/PQCgenKAT_kem768
+./ref/nistkat/PQCgenKAT_kem1024
+```
+
+The repository also includes pre-generated KAT files under `Kyber_KAT/`.
+
+## TCP client/server demo (optional)
+
+This fork includes a TCP socket-based client/server demonstration of Kyber KEM under `ref/test/`.
+
+### Programs
+
+Built binaries (per mode):
+
+- `test_kyber_keygen{2,3,4}`: generate keypairs and write `*.bin`
+- `test_kyber_server{2,3,4}`: listen on TCP port 5000, encapsulate, verify shared secret
+- `test_kyber_client{2,3,4}`: connect to server, decapsulate, send shared secret for verification
+- `test_kyber_stress{2,3,4}`: concurrent client load generator (uses `fork()`)
+
+Mode mapping:
+
+| Mode suffix | Kyber parameter set |
+|-----------:|----------------------|
+| 2 | Kyber512 (KYBER_K=2) |
+| 3 | Kyber768 (KYBER_K=3) |
+| 4 | Kyber1024 (KYBER_K=4) |
+
+Key/ciphertext sizes:
+
+| Set | PK | SK | CT | SS |
+|-----|----:|----:|----:|----:|
+| Kyber512 | 800 | 1632 | 768 | 32 |
+| Kyber768 | 1184 | 2400 | 1088 | 32 |
+| Kyber1024 | 1568 | 3168 | 1568 | 32 |
+
+### Build
+
+```sh
+make -C ref/test clean
+make -C ref/test all
+```
+
+### Run (localhost)
+
+Terminal 1 (generate key files):
+
+```sh
+cd ref/test
+./test_kyber_keygen2
+```
+
+Terminal 2 (server):
+
+```sh
+cd ref/test
+./test_kyber_server2
+```
+
+Terminal 3 (client):
+
+```sh
+cd ref/test
+./test_kyber_client2 127.0.0.1
+```
+
+Notes:
+
+- The client accepts **only one CLI argument**: `server_ip`. The port is currently fixed to `5000` in source.
+- Logs are written in the current directory:
+  - client: `client_kyber.log` (override via `CLIENT_LOG_PATH=/path/to/log`)
+  - server: `server_kyber.log`
+
+### Makefile shortcuts (recommended)
+
+Instead of calling binaries directly, you can use the helper targets in `ref/test/Makefile`:
+
+```sh
+make -C ref/test keygen MODE=2
+make -C ref/test run-server MODE=2
+make -C ref/test run-client MODE=2 TARGET_IP=127.0.0.1
+```
+
+### Files and logs
+
+Generated files (in the working directory, typically `ref/test/`):
+
+- Key material: `client_pk.bin`, `client_sk.bin`, `server_pk.bin`, `server_sk.bin`
+- Logs: `client_kyber.log`, `server_kyber.log`
+
+Log line format (one line per run):
+
+```
+status=<int>,ss_len=<bytes>,elapsed_us=<us>,user_ms=<ms>,sys_ms=<ms>,rss_kb=<kb>
+```
+
+### Error codes
+
+Client (`test_kyber_client*`) status codes:
+
+- `0`: success (shared secret verified)
+- `-1`: send client PK failed
+- `-2`: receive ciphertext failed
+- `-3`: ciphertext size mismatch
+- `-4`: decapsulation failed
+- `-5`: send shared secret failed
+- `-6`: receive verification result failed
+- `-7`: verification failed (shared secret mismatch)
+- `-8`: invalid verification result
+
+Server (`test_kyber_server*`) status codes:
+
+- `0`: success (shared secrets match)
+- `1`: shared secret mismatch
+- negative values: stage-specific transport/protocol errors (logged to `server_kyber.log`)
+
+### Network protocol
+
+Messages are framed as `uint32_be length` followed by payload:
+
+1. client → server: client public key
+2. server → client: ciphertext
+3. client → server: shared secret (from decapsulation)
+4. server → client: 1-byte verification result (0 = match, 1 = mismatch)
+
+### Remote run (two machines)
+
+The demo binaries expect key files in the working directory.
+
+1) Run keygen once (on either machine):
+
+```sh
+cd ref/test
+./test_kyber_keygen2
+```
+
+2) Copy files:
+
+- To the server machine: `client_pk.bin`, `server_sk.bin`
+- To the client machine: `client_sk.bin`, `server_pk.bin`
+
+3) Start server on server machine:
+
+```sh
+cd ref/test
+./test_kyber_server2
+```
+
+4) Run client on client machine:
+
+```sh
+cd ref/test
+./test_kyber_client2 <server_ip>
+```
+
+### Stress tool
+
+The stress tool spawns multiple concurrent client sessions and logs a line per child process.
+
+```sh
+cd ref/test
+TARGET_IP=<server_ip> CONCURRENT_SESSIONS=10 CLIENT_LOG_PATH=client_stress.log ./test_kyber_stress2
+```
+
+### Troubleshooting
+
+- `connect() failed: Connection refused`: start the server first, and check the server IP.
+- `bind: Address already in use`: port `5000` is occupied; stop the other process or change `SERVER_PORT` in source.
+- `Failed to open client_sk.bin` / `client_pk.bin` / `server_sk.bin` / `server_pk.bin`: run keygen and ensure you run binaries from the directory containing the `*.bin` files.
+
+## Coverage (optional)
+
+Generate an lcov report for the `ref/` implementation:
+
+```sh
+./runlcov.sh
+```
+
+## License
+
+Same as the upstream Kyber reference implementation (public domain).
 
