@@ -4,7 +4,7 @@
 #include "../kem.h"
 #include "../randombytes.h"
 
-#define NTESTS 1 // test count
+#define NTESTS 10000 // test count
 
 void run_test(int test_idx)
 {
